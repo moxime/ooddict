@@ -15,7 +15,7 @@ If you download successfully, it can be found in the following path:
 
 # Data Preparation
 
- The default dataset location is `OODD/MCM/datasets`. The overall file structure is as follows:
+ The default dataset location is `OODD/MCM/datasets`. The MCM file structure is as follows:
 ([ImageNet1K](https://image-net.org/challenges/LSVRC/2012/index.php#) as ID dataset, [iNaturalist](https://arxiv.org/abs/1707.06642), [SUN](https://vision.princeton.edu/projects/2010/SUN/), [Places](https://arxiv.org/abs/1610.02055), and [Texture](https://arxiv.org/abs/1311.3618)  as OOD datasets)
 ```
 MCM
