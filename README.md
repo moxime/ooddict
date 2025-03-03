@@ -21,5 +21,5 @@ Please refer to `MCM+OODD_README.md` in the `MCM` folder.
 Please refer to `README.md` in the `NegLabel` folder.
 
 ## Acknowledgement
-Our repo is developed based on [OpenOOD](https://github.com/Jingkang50/OpenOOD), [MCM](https://github.com/deeplearning-wisc/MCM).
+Our repo is developed based on [OpenOOD](https://github.com/Jingkang50/OpenOOD), [MCM](https://github.com/deeplearning-wisc/MCM), [NegLabel](https://github.com/XueJiang16/NegLabel).
 
