@@ -1,54 +1,24 @@
 # OODD: Test-time Out-of-Distribution Detection with Dynamic Dictionary
 Yifeng Yang, Lin Zhu, Zewen Sun, Hengyu Liu, Qinying Gu, Nanyang Ye 
-<br>
-| [Full Paper](#) | [code](https://github.com/zxk1212/OODD) 
-<br>
-This repository contains the implementation code for the paper ‘OODD: Test-time Out-of-Distribution Detection with Dynamic Dictionary’(CVPR2025).
 
+<!-- <br>
+| [Full Paper](#) | [code](https://github.com/zxk1212/OODD) 
+<br> -->
+
+
+[CVPR2025] This repository contains the implementation code for the paper [OODD: Test-time Out-of-Distribution Detection with Dynamic Dictionary](#).
 
 ## Setup
-Our code is coming soon.
+For OpenOOD benchmark, please refer to [OpenOOD](https://github.com/Jingkang50/OpenOOD/blob/main/README.md).
 
+## Running the code
+```bash
+the code will be released soon.
+```
 ## MCM + OODD
-### Download the checkpoints
-```sh
-cd MCM
-sudo apt update
-sudo apt install git-lfs
-git lfs clone https://huggingface.co/openai/clip-vit-base-patch16
-# or you can download the checkpoints from the following link
-# git lfs clone https://hf-mirror.com/openai/clip-vit-base-patch16
-```
-
-
-If you download successfully, it can be found in the following path:
-`OODD/MCM/clip-vit-base-patch16`
-
-### Data Preparation
-
- The default dataset location is `OODD/MCM/datasets`. The MCM file structure is as follows:
-([ImageNet1K](https://image-net.org/challenges/LSVRC/2012/index.php#) as ID dataset, [iNaturalist](https://arxiv.org/abs/1707.06642), [SUN](https://vision.princeton.edu/projects/2010/SUN/), [Places](https://arxiv.org/abs/1610.02055), and [Texture](https://arxiv.org/abs/1311.3618)  as OOD datasets)
-```
-MCM
-|-- datasets
-    |-- ImageNet
-        |-- train
-        |-- val
-    |-- ImageNet_OOD_dataset
-        |-- iNaturalist
-        |-- dtd
-        |-- SUN
-        |-- Places
-    ...
-```
-### Run the OODD code
-```sh
-cd MCM
-
-CUDA_VISIBLE_DEVICES=0 python eval_ood_detection.py --in_dataset ImageNet --name eval_ood --CLIP_ckpt ViT-B/16 --root-dir datasets # for gpu_id=0
-```
-### Results
-The results will be saved in the `OODD/MCM/results` directory. 
+Please refer to `MCM+OODD_README.md` in the `MCM` folder.
+## NegLabel + OODD
+Please refer to `README.md` in the `NegLabel` folder.
 
 ## Acknowledgement
 Our repo is developed based on [OpenOOD](https://github.com/Jingkang50/OpenOOD), [MCM](https://github.com/deeplearning-wisc/MCM).
