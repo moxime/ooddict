@@ -27,3 +27,6 @@ Please refer to `README.md` in the `NegLabel` folder.
 ## Acknowledgement
 Our repo is developed based on [OpenOOD](https://github.com/Jingkang50/OpenOOD), [MCM](https://github.com/deeplearning-wisc/MCM), [NegLabel](https://github.com/XueJiang16/NegLabel).
 
+## Contact us
+
+For any additional questions, feel free to email maxwellquadyang@gmail.com .
