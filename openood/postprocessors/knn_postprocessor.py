@@ -120,7 +120,7 @@ class KNNPostprocessor(BasePostprocessor):
             self.id_name = id_loader_dict["train"].dataset.name
             cache_name = f"cache/{self.id_name}_in_all_layers.npy"
             if not os.path.exists(cache_name):
-                activation_log, msp_list = [], []
+                activation_log, msp_list, label_list = [], [], []
                 net.eval()
                 with torch.no_grad():
                     for batch in tqdm(id_loader_dict['train'],
@@ -128,6 +128,7 @@ class KNNPostprocessor(BasePostprocessor):
                                       position=0,
                                       leave=True):
                         data = batch['data'].cuda()
+                        labels = batch['label']
                         data = data.float()
 
                         output, feature = net(data, return_feature=True)
@@ -135,11 +136,40 @@ class KNNPostprocessor(BasePostprocessor):
                         activation_log.append(
                             normalizer(feature.data.cpu().numpy()))
                         msp_list.append(msp)
+                        label_list.append(labels)
                 
                 msp_list = torch.cat(msp_list)
-                idx = torch.argsort(msp_list, descending=True).cpu().numpy().astype(int)
-                self.idx = idx
+                label_list = torch.cat(label_list)
 
+                unique_classes = torch.unique(label_list)
+
+                class_sorted_indices = []
+                max_class_samples = 0
+                
+                for cls in unique_classes:
+                    # Get indices of samples belonging to this class
+                    cls_indices = torch.where(label_list == cls)[0]
+                    
+                    # Get the confidence scores for these samples
+                    cls_msp = msp_list[cls_indices]
+                    
+                    # Sort these indices by confidence in descending order
+                    sorted_cls_indices = torch.argsort(cls_msp, descending=True)
+                    cls_indices = cls_indices.to(sorted_cls_indices.device)
+                    # Convert back to original indices
+                    sorted_orig_indices = cls_indices[sorted_cls_indices].cpu().numpy()
+                    class_sorted_indices.append(sorted_orig_indices)
+                    max_class_samples = max(max_class_samples, len(sorted_orig_indices))
+                
+                final_idx = []
+                
+                # Interleave the classes: first highest confidence from each class, then second highest, etc.
+                for i in range(max_class_samples):
+                    for class_idx, sorted_indices in enumerate(class_sorted_indices):
+                        if i < len(sorted_indices):
+                            final_idx.append(sorted_indices[i])
+                
+                self.idx = np.array(final_idx, dtype=int)
 
                 self.activation_log = np.concatenate(activation_log, axis=0)
                 self.setup_flag = True
@@ -163,15 +193,11 @@ class KNNPostprocessor(BasePostprocessor):
     @torch.no_grad()
     def conf_postprocess(self, food, ftest):
         id_train_size = self.activation_log.shape[0]    
-        if id_train_size == 1281167:
-            self.ALPHA = 0.5
-        else:
-            self.ALPHA = 0.5 # 0.5 for imagenet200
-        rand_ind = np.random.choice(id_train_size, int(id_train_size * self.ALPHA), replace=False)
-     
+
+        select_idx_len = int(self.ALPHA * id_train_size)
         queue_size = self.queue_size
        
-        ftrain = self.activation_log[rand_ind]
+        ftrain = self.activation_log[:select_idx_len]
 
         queue = PriorityQueue()
 
@@ -278,7 +304,7 @@ class KNNPostprocessor(BasePostprocessor):
             pred_list = np.load(prefix + "_out_pred.npy")
             label_list = np.load(prefix + "_out_label.npy")
             id_conf, ood_conf = self.conf_postprocess(ood_feature, self.id_feature)
-          
+
             return id_conf, pred_list, ood_conf, label_list
 
     def acc_inference(self,
