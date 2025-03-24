@@ -4,6 +4,7 @@ from numpy import load
 from torch.utils.data import DataLoader
 
 from openood.preprocessors.test_preprocessor import TestStandardPreProcessor
+from openood.preprocessors.multicrop_preprocessor import MulticropPreProcessor
 from openood.preprocessors.utils import get_preprocessor
 from openood.utils.config import Config
 
@@ -22,7 +23,8 @@ def get_dataloader(config: Config):
         split_config = dataset_config[split]
         preprocessor = get_preprocessor(config, split)
         # weak augmentation for data_aux
-        data_aux_preprocessor = TestStandardPreProcessor(config)
+        # data_aux_preprocessor = TestStandardPreProcessor(config)
+        data_aux_preprocessor = MulticropPreProcessor(config)
 
         if split_config.dataset_class == 'ImglistExtraDataDataset':
             dataset = ImglistExtraDataDataset(
@@ -113,6 +115,24 @@ def get_ood_dataloader(config: Config):
                                     shuffle=ood_config.shuffle,
                                     num_workers=ood_config.num_workers)
             dataloader_dict[split] = dataloader
+        elif split == 'c_out':
+            data_aux_preprocessor = MulticropPreProcessor(config)
+            sub_dataloader_dict = {}
+            for dataset_name in split_config.datasets:
+                dataset_config = split_config[dataset_name]
+                dataset = CustomDataset(
+                    name=ood_config.name + '_' + split,
+                    imglist_pth=dataset_config.imglist_pth,
+                    data_dir=dataset_config.data_dir,
+                    num_classes=ood_config.num_classes,
+                    preprocessor=preprocessor,
+                    data_aux_preprocessor=data_aux_preprocessor)
+                dataloader = DataLoader(dataset,
+                                        batch_size=ood_config.batch_size,
+                                        shuffle=ood_config.shuffle,
+                                        num_workers=ood_config.num_workers)
+                sub_dataloader_dict[dataset_name] = dataloader
+            dataloader_dict[split] = sub_dataloader_dict
         else:
             # dataloaders for csid, nearood, farood
             sub_dataloader_dict = {}

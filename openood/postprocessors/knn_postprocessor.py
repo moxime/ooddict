@@ -127,12 +127,22 @@ class KNNPostprocessor(BasePostprocessor):
                                       desc='Setup: ',
                                       position=0,
                                       leave=True):
-                        data = batch['data'].cuda()
+                        data = batch['data_aux'].cuda()
                         labels = batch['label']
                         data = data.float()
-
+                        batch_size, num_samples, C, H, W = data.shape
+                        data = data.view(-1, C, H, W)
                         output, feature = net(data, return_feature=True)
                         msp, _ = torch.max(torch.softmax(output, dim=1), dim=1)
+                        output = output.view(batch_size, num_samples, -1)
+                        feature = feature.view(batch_size, num_samples, -1)
+                        msp = msp.view(batch_size, num_samples)
+
+                        msp, select_samples_idx = torch.max(msp, dim=-1)
+
+                        output = output[torch.arange(output.size(0)), select_samples_idx]
+                        feature = feature[torch.arange(feature.size(0)), select_samples_idx]
+                        
                         activation_log.append(
                             normalizer(feature.data.cpu().numpy()))
                         msp_list.append(msp)
