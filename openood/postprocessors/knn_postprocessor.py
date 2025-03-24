@@ -207,7 +207,7 @@ class KNNPostprocessor(BasePostprocessor):
         select_idx_len = int(self.ALPHA * id_train_size)
         queue_size = self.queue_size
        
-        ftrain = self.activation_log[:select_idx_len]
+        ftrain = self.activation_log[self.idx[:select_idx_len]]
 
         queue = PriorityQueue()
 
