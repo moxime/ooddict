@@ -6,7 +6,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py \
     configs/pipelines/test/test_ood.yml \
     configs/preprocessors/base_preprocessor.yml \
     configs/postprocessors/knn.yml \
-    --num_workers 8 \
+    --num_workers 1 \
     --network.checkpoint 'checkpoint/resnet18_cifar100.ckpt' \
     --postprocessor.postprocessor_args.K1 10 \
     --postprocessor.postprocessor_args.K2 5 \
@@ -23,7 +23,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py \
     configs/pipelines/test/test_ood.yml \
     configs/preprocessors/base_preprocessor.yml \
     configs/postprocessors/knn.yml \
-    --num_workers 8 \
+    --num_workers 1 \
     --network.checkpoint 'checkpoint/resnet18_cifar10.ckpt' \
     --postprocessor.postprocessor_args.K1 5 \
     --postprocessor.postprocessor_args.K2 5 \
@@ -39,7 +39,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py \
     configs/pipelines/test/test_ood.yml \
     configs/preprocessors/base_preprocessor.yml \
     configs/postprocessors/knn.yml \
-    --num_workers 4 \
+    --num_workers 1 \
     --ood_dataset.image_size 256 \
     --dataset.test.batch_size 256 \
     --dataset.val.batch_size 256 \
@@ -61,7 +61,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py \
     configs/pipelines/test/test_ood.yml \
     configs/preprocessors/base_preprocessor.yml \
     configs/postprocessors/knn.yml \
-    --num_workers 4 \
+    --num_workers 1 \
     --ood_dataset.image_size 256 \
     --dataset.test.batch_size 256 \
     --dataset.val.batch_size 256 \
