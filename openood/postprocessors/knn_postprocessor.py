@@ -10,14 +10,16 @@ from torch.utils.data import DataLoader
 import openood.utils.comm as comm
 from queue import PriorityQueue
 
-normalizer = lambda x: x / np.linalg.norm(x, axis=-1, keepdims=True) + 1e-10
+
+def normalizer(x): return x / np.linalg.norm(x, axis=-1, keepdims=True) + 1e-10
+
 
 def kth_largest_per_column(matrix, k):
     """
     Compute the k-th largest element for each column of a matrix.
     """
     kth_values, _ = torch.kthvalue(matrix, matrix.size(0) - k + 1, dim=0)
-    return kth_values.cpu().numpy()  
+    return kth_values.cpu().numpy()
 
 
 def batched_matrix_multiply(ftrain, second_matrix, K, batch_size=128):
@@ -38,7 +40,7 @@ def batched_matrix_multiply(ftrain, second_matrix, K, batch_size=128):
         # Get the current batch of the second matrix
         start = i * batch_size
         end = min(start + batch_size, p)
-        second_batch_tensor = second_matrix_tensor[start:end,:]
+        second_batch_tensor = second_matrix_tensor[start:end, :]
         batch_result = ftrain_tensor @ second_batch_tensor.T
         # Compute the k-th largest element for each column
         score = kth_largest_per_column(batch_result, K)
@@ -53,7 +55,7 @@ class ScoreData:
     def __init__(self, score, data):
         self.score = score
         self.data = data
-    
+
     def __lt__(self, other):
         return float(self.score) > float(other.score)
 
@@ -65,7 +67,7 @@ class KNNPostprocessor(BasePostprocessor):
         self.K1 = self.args.K1
         self.K2 = self.args.K2
         self.ALPHA = self.args.ALPHA
-        self.queue_size = self.args.queue_size   
+        self.queue_size = self.args.queue_size
         self.activation_log = None
         self.id_feature = None
         self.args_dict = self.config.postprocessor.postprocessor_sweep
@@ -122,6 +124,9 @@ class KNNPostprocessor(BasePostprocessor):
             if not os.path.exists(cache_name):
                 activation_log, msp_list, label_list = [], [], []
                 net.eval()
+                print('************')
+                print('****', id_loader_dict['train'].batch_size, '****')
+                print('************')
                 with torch.no_grad():
                     for batch in tqdm(id_loader_dict['train'],
                                       desc='Setup: ',

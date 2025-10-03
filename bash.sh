@@ -72,6 +72,3 @@ CUDA_VISIBLE_DEVICES=0 python main.py \
     --postprocessor.postprocessor_args.ALPHA 0.5 \
     --postprocessor.postprocessor_args.queue_size 2048 \
     --merge_option merge
-
-
-
