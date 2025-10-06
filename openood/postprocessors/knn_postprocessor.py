@@ -76,7 +76,6 @@ class KNNPostprocessor(BasePostprocessor):
         self.aux_feature = None
         self.count = 0
 
-    
     def get_auxiliary_data(self, net=None, aux_data_loader=None):
         if aux_data_loader is None:
             return None
@@ -87,21 +86,20 @@ class KNNPostprocessor(BasePostprocessor):
                 aux_feature = []
                 iter = 0
                 for batch in tqdm(aux_data_loader,
-                                        desc='get_aux_feature: ',
-                                        position=0,
-                                        leave=True):
+                                  desc='get_aux_feature: ',
+                                  position=0,
+                                  leave=True):
                     data = batch['data'].cuda()
                     data = data[:128].float()
                     output, feature = net(data, return_feature=True)
                     aux_feature.append(
                         normalizer(feature.data.cpu().numpy()))
                     iter += 1
-                    if iter==1:
+                    if iter == 1:
                         break
                 aux_feature = np.concatenate(aux_feature, axis=0)
                 aux_feature_dict[aux_key] = aux_feature
             return aux_feature_dict
-        
 
     def setup(self, net: nn.Module, id_loader_dict, ood_loader_dict):
         if not self.setup_flag:
@@ -124,9 +122,6 @@ class KNNPostprocessor(BasePostprocessor):
             if not os.path.exists(cache_name):
                 activation_log, msp_list, label_list = [], [], []
                 net.eval()
-                print('************')
-                print('****', id_loader_dict['train'].batch_size, '****')
-                print('************')
                 with torch.no_grad():
                     for batch in tqdm(id_loader_dict['train'],
                                       desc='Setup: ',
@@ -147,12 +142,12 @@ class KNNPostprocessor(BasePostprocessor):
 
                         output = output[torch.arange(output.size(0)), select_samples_idx]
                         feature = feature[torch.arange(feature.size(0)), select_samples_idx]
-                        
+
                         activation_log.append(
                             normalizer(feature.data.cpu().numpy()))
                         msp_list.append(msp)
                         label_list.append(labels)
-                
+
                 msp_list = torch.cat(msp_list)
                 label_list = torch.cat(label_list)
 
@@ -160,14 +155,14 @@ class KNNPostprocessor(BasePostprocessor):
 
                 class_sorted_indices = []
                 max_class_samples = 0
-                
+
                 for cls in unique_classes:
                     # Get indices of samples belonging to this class
                     cls_indices = torch.where(label_list == cls)[0]
-                    
+
                     # Get the confidence scores for these samples
                     cls_msp = msp_list[cls_indices]
-                    
+
                     # Sort these indices by confidence in descending order
                     sorted_cls_indices = torch.argsort(cls_msp, descending=True)
                     cls_indices = cls_indices.to(sorted_cls_indices.device)
@@ -175,15 +170,15 @@ class KNNPostprocessor(BasePostprocessor):
                     sorted_orig_indices = cls_indices[sorted_cls_indices].cpu().numpy()
                     class_sorted_indices.append(sorted_orig_indices)
                     max_class_samples = max(max_class_samples, len(sorted_orig_indices))
-                
+
                 final_idx = []
-                
+
                 # Interleave the classes: first highest confidence from each class, then second highest, etc.
                 for i in range(max_class_samples):
                     for class_idx, sorted_indices in enumerate(class_sorted_indices):
                         if i < len(sorted_indices):
                             final_idx.append(sorted_indices[i])
-                
+
                 self.idx = np.array(final_idx, dtype=int)
 
                 self.activation_log = np.concatenate(activation_log, axis=0)
@@ -191,9 +186,10 @@ class KNNPostprocessor(BasePostprocessor):
                 np.save(cache_name, self.activation_log)
                 np.save(f"cache/{self.id_name}_idx.npy", self.idx)
             else:
+                print('Fetching cached values')
                 self.activation_log = np.load(cache_name)
                 self.idx = np.load(f"cache/{self.id_name}_idx.npy")
-        
+
                 self.setup_flag = True
         else:
             pass
@@ -207,11 +203,11 @@ class KNNPostprocessor(BasePostprocessor):
 
     @torch.no_grad()
     def conf_postprocess(self, food, ftest):
-        id_train_size = self.activation_log.shape[0]    
+        id_train_size = self.activation_log.shape[0]
 
         select_idx_len = int(self.ALPHA * id_train_size)
         queue_size = self.queue_size
-       
+
         ftrain = self.activation_log[self.idx[:select_idx_len]]
 
         queue = PriorityQueue()
@@ -219,7 +215,7 @@ class KNNPostprocessor(BasePostprocessor):
         if self.aux_feature is not None:
             # for T-out
             key = list(self.aux_feature.keys())
-            if len(key)>1:
+            if len(key) > 1:
                 key = key[self.count]
             else:
                 key = key[0]
@@ -234,57 +230,51 @@ class KNNPostprocessor(BasePostprocessor):
         else:
             memory_bank = None
 
-    
-
-  
         all_data = np.concatenate([ftest, food], axis=0)
-        label_id = np.concatenate([np.ones(ftest.shape[0]), np.zeros(food.shape[0])], axis=0)  
-        np.random.seed(100)     
+        label_id = np.concatenate([np.ones(ftest.shape[0]), np.zeros(food.shape[0])], axis=0)
+        np.random.seed(100)
         idx = np.random.permutation(all_data.shape[0])
         all_data = all_data[idx]
-        label_id = label_id[idx] 
+        label_id = label_id[idx]
 
         batch_size = 512
-        
+
         num_batches = all_data.shape[0] // batch_size + (all_data.shape[0] % batch_size > 0)
-    
+
         scores_list = []
-        
+
         for i in tqdm(range(num_batches), desc="Continue Learning"):
             start = i * batch_size
             end = min(start + batch_size, all_data.shape[0])
             batch_data = all_data[start:end]
             batch_score = batched_matrix_multiply(ftrain, batch_data, self.K1)
-        
+
             for j in range(batch_score.shape[0]):
                 queue.put(ScoreData(batch_score[j], batch_data[j]))
                 if queue.qsize() > queue_size:
                     queue.get()
-            
-         
+
             data_list = []
             for item in list(queue.queue):
                 data_list.append(item.data)
             new_food = np.array(data_list)
             if memory_bank is not None:
                 new_food = np.concatenate([new_food, memory_bank], axis=0)
-        
-            ood_batch_score = batched_matrix_multiply(new_food, batch_data, self.K2) # 10
+
+            ood_batch_score = batched_matrix_multiply(new_food, batch_data, self.K2)  # 10
             batch_score = batch_score - ood_batch_score
-              
+
             scores_list.append(batch_score)
         scores_all = np.concatenate(scores_list, axis=0)
         scores_in_final = scores_all[label_id == 1]
         scores_ood_final = scores_all[label_id == 0]
 
-       
         return scores_in_final, scores_ood_final
-    
 
     def inference(self,
                   net: nn.Module,
                   data_loader: DataLoader,
-                  dataset_name: str=None,
+                  dataset_name: str = None,
                   progress: bool = True):
         if dataset_name is None:
             prefix = f"cache/{data_loader.dataset.name}_vs_{self.id_name}"
@@ -294,12 +284,12 @@ class KNNPostprocessor(BasePostprocessor):
         if not os.path.exists(cache_name):
             pred_list, conf_list, label_list, feature_list = [], [], [], []
             for batch in tqdm(data_loader,
-                            disable=not progress or not comm.is_main_process()):
+                              disable=not progress or not comm.is_main_process()):
                 data = batch['data'].cuda()
                 label = batch['label'].cuda()
                 msp, pred, feature_normed = self.acc_postprocess(net, data)
                 pred_list.append(pred.cpu())
-                
+
                 label_list.append(label.cpu())
                 feature_list.append(feature_normed)
             # convert values into numpy array
@@ -323,39 +313,39 @@ class KNNPostprocessor(BasePostprocessor):
             return id_conf, pred_list, ood_conf, label_list
 
     def acc_inference(self,
-                  net: nn.Module,
-                  data_loader: DataLoader,
-                  progress: bool = True):
+                      net: nn.Module,
+                      data_loader: DataLoader,
+                      progress: bool = True):
         cache_name = f"cache/{data_loader.dataset.name}_vs_{self.id_name}_out_all_layers.npy"
         if not os.path.exists(cache_name):
             pred_list, label_list, feature_list = [], [], []
             for batch in tqdm(data_loader,
-                            disable=not progress or not comm.is_main_process()):
+                              disable=not progress or not comm.is_main_process()):
                 data = batch['data'].cuda()
                 label = batch['label'].cuda()
                 msp, pred, feature_normed = self.acc_postprocess(net, data)
                 pred_list.append(pred.cpu())
                 label_list.append(label.cpu())
                 feature_list.append(feature_normed)
-               
+
             # convert values into numpy array
             pred_list = torch.cat(pred_list).numpy().astype(int)
             label_list = torch.cat(label_list).numpy().astype(int)
             feature_list = np.concatenate(feature_list, axis=0)
 
-   
             np.save(cache_name, feature_list)
             np.save(f"cache/{data_loader.dataset.name}_vs_{self.id_name}_out_label.npy", label_list)
             np.save(f"cache/{data_loader.dataset.name}_vs_{self.id_name}_out_pred.npy", pred_list)
 
             self.id_feature = feature_list
-      
+
             return pred_list, label_list
         else:
             pred_list = np.load(f"cache/{data_loader.dataset.name}_vs_{self.id_name}_out_pred.npy")
-            label_list = np.load(f"cache/{data_loader.dataset.name}_vs_{self.id_name}_out_label.npy")
+            label_list = np.load(
+                f"cache/{data_loader.dataset.name}_vs_{self.id_name}_out_label.npy")
             self.id_feature = np.load(cache_name)
-   
+
             return pred_list, label_list
 
     def set_hyperparam(self, hyperparam: list):
