@@ -10,8 +10,11 @@ def main(config):
 
 if __name__ == '__main__':
 
+    import sys
+    print(sys.path)
+    import sitecustomize
     config = setup_config()
-    
+
     launch(
         main,
         config.num_gpus,

@@ -1,4 +1,7 @@
 # sitecustomize.py  (Python auto-imports this if it's on PYTHONPATH)
+print('***\n'*100)
+
+
 def _force_antialias_true():
     import inspect
 
