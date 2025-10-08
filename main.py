@@ -1,5 +1,6 @@
 from openood.pipelines import get_pipeline
 from openood.utils import launch, setup_config
+import sitecustomize
 
 
 def main(config):
@@ -11,7 +12,7 @@ def main(config):
 if __name__ == '__main__':
 
     config = setup_config()
-    
+
     launch(
         main,
         config.num_gpus,
