@@ -1,5 +1,5 @@
 checkpoint/
 __pycache__
-results/
+results*/
 data/
-cache/
+cache*/
