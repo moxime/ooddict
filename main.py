@@ -10,14 +10,7 @@ def main(config):
 
 if __name__ == '__main__':
 
-    import sys
-    print('Path', sys.path)
-    print('forceantialias in sys.modules?', 'forceantialias' in sys.modules)
-    try:
-        import forceantialias
-        print('Imported from:', forceantialias.__file__)
-    except Exception as e:
-        print('Import raised:', repr(e))
+    import forceantialias
 
     config = setup_config()
 
