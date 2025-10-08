@@ -1,6 +1,5 @@
 from openood.pipelines import get_pipeline
 from openood.utils import launch, setup_config
-import sitecustomize
 
 
 def main(config):
@@ -12,8 +11,14 @@ def main(config):
 if __name__ == '__main__':
 
     import sys
-    print(sys.path)
-    import sitecustomize
+    print('Path', sys.path)
+    print('forceantialias in sys.modules?', 'forceantialias' in sys.modules)
+    try:
+        import forceantialias
+        print('Imported from:', forceantialias.__file__)
+    except Exception as e:
+        print('Import raised:', repr(e))
+
     config = setup_config()
 
     launch(

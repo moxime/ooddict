@@ -1,5 +1,6 @@
 # sitecustomize.py  (Python auto-imports this if it's on PYTHONPATH)
 import logging
+print('ok')
 
 
 def modify_function(func, pos):
@@ -31,6 +32,7 @@ def _force_antialias_true():
 
     for module in modules:
 
+        print(_origname)
         for (_origname, _orig) in getmembers(module, isfunction):
 
             try:
