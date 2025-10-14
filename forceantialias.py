@@ -55,4 +55,4 @@ def _force_antialias_true():
             setattr(module, _origname, modify_function(_orig, aa_pos))
 
 
-# _force_antialias_true()
+_force_antialias_true()
