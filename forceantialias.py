@@ -1,15 +1,20 @@
 # sitecustomize.py  (Python auto-imports this if it's on PYTHONPATH)
 import logging
-print('ok')
 
 
 def modify_function(func, pos):
 
     def patched_func(*args, **kwargs):
-        passed_positionally = (len(args) >= max(0, pos))
-        if "antialias" not in kwargs and not passed_positionally:
+
+        passed_positionally = len(args) >= pos + 1
+        if passed_positionally and args[pos] == 'warn':
+            args = list(args)
+            args[pos] = True
+
+        if not passed_positionally and ("antialias" not in kwargs or kwargs['antialias'] == 'warn'):
             kwargs["antialias"] = True
-            return func(*args, **kwargs)
+
+        return func(*args, **kwargs)
 
     return patched_func
 
@@ -32,7 +37,6 @@ def _force_antialias_true():
 
     for module in modules:
 
-        print(_origname)
         for (_origname, _orig) in getmembers(module, isfunction):
 
             try:
@@ -51,4 +55,4 @@ def _force_antialias_true():
             setattr(module, _origname, modify_function(_orig, aa_pos))
 
 
-_force_antialias_true()
+# _force_antialias_true()
