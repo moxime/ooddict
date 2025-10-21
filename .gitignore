@@ -2,4 +2,5 @@ checkpoint/
 __pycache__/
 results*/
 data/
+!data/benchmark_img_list/
 cache*/
