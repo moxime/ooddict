@@ -1,5 +1,5 @@
 # for cifar100 
-CUDA_VISIBLE_DEVICES=0 python main.py \
+ python main.py \
     --config configs/datasets/cifar100/cifar100.yml \
     configs/datasets/cifar100/cifar100_ood.yml \
     configs/networks/resnet18_32x32.yml \
@@ -16,7 +16,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py \
 
 
 # for cifar10 
-CUDA_VISIBLE_DEVICES=0 python main.py \
+ python main.py \
     --config configs/datasets/cifar10/cifar10.yml \
     configs/datasets/cifar10/cifar10_ood.yml \
     configs/networks/resnet18_32x32.yml \
@@ -32,7 +32,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py \
     --merge_option merge
 
 # for imagenet200 
-CUDA_VISIBLE_DEVICES=0 python main.py \
+ python main.py \
     --config configs/datasets/imagenet200/imagenet200.yml \
     configs/datasets/imagenet200/imagenet200_ood.yml \
     configs/networks/resnet18_224x224.yml \
@@ -54,7 +54,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py \
 
 
 # for imagenet1k 
-CUDA_VISIBLE_DEVICES=0 python main.py \
+ python main.py \
     --config configs/datasets/imagenet/imagenet.yml \
     configs/datasets/imagenet/imagenet_myood.yml \
     configs/networks/resnet50.yml \
