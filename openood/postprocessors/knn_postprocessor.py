@@ -62,6 +62,7 @@ class ScoreData:
 
 class KNNPostprocessor(BasePostprocessor):
     def __init__(self, config):
+        torch.multiprocessing.set_sharing_strategy('file_system')
         super(KNNPostprocessor, self).__init__(config)
         self.args = self.config.postprocessor.postprocessor_args
         self.K1 = self.args.K1
